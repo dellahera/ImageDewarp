@@ -9,7 +9,7 @@ using namespace cv;
 using namespace std;
 
 clock_t t1, t2;
-int Row_size, Col_size, nRow[8] = { 1,-1 }, nCol[8] = { 0,0 }, yHorizontal,yMax = -9999999, yMin = 9999999, xMax = -9999999, xMin = 9999999;
+int Row_size, Col_size, nRow[8] = { 1,-1 }, nCol[8] = { 0,0 }, cumValue, yHorizontal, yMax = -9999999, yMin = 9999999, xMax = -9999999, xMin = 9999999;
 //nRow[8] = { 0,1,1,1,0,-1,-1,-1 }, nCol[8]= { -1,-1,0,1,1,1,0,-1 };
 long hist[200], histW[4000], countCol[1400], botttomLine[2000];
 Mat HRWP, imgRGB, white, imageBinary;
@@ -38,13 +38,13 @@ Mat findWhiteSpace(Mat src) {
 	int  a = src.rows, b = src.cols;
 	Mat dst = src;
 	ii tmp;
-	bool cek ;
+	bool cek;
 	long long jum = 0;
 	for (int i = 0; i < b; i++) {
 		cek = false;
 		for (int j = 1; j < a; j++) {
-			if(cek && (dst.at<Vec3b>(j, i)[0] == 150) ) dst.at<Vec3b>(j, i)[0] = 255;
-			if ((int)src.at<Vec3b>(j, i)[2] == 255 && (int)dst.at<Vec3b>(j, i)[0] == 255 && (int)src.at<Vec3b>(j-1, i)[2] != 255 ) {
+			if (cek && (dst.at<Vec3b>(j, i)[0] == 150)) dst.at<Vec3b>(j, i)[0] = 255;
+			if ((int)src.at<Vec3b>(j, i)[2] == 255 && (int)dst.at<Vec3b>(j, i)[0] == 255 && (int)src.at<Vec3b>(j - 1, i)[2] != 255) {
 				jum = 1;
 				dst.at<Vec3b>(j, i)[0] = 150;
 				tmp.first = j;
@@ -55,20 +55,20 @@ Mat findWhiteSpace(Mat src) {
 					tmp = myQ.front();
 					myQ.pop();
 					//for (int k = 0; k < 2; k++) {
-						if (tmp.first + nRow[0] >= 0 && tmp.first + nRow[0] < a && tmp.second + nCol[0] >= 0 && tmp.second + nCol[0] < b) {
-							if (((int)src.at<Vec3b>(tmp.first + nRow[0], tmp.second + nCol[0])[2] == 255) && (int)dst.at<Vec3b>(tmp.first + nRow[0], tmp.second + nCol[0])[0] == 255) {
-								jum++;
-								yMax = max(yMax, tmp.first + nRow[0]);
-								yMin = min(yMin, tmp.first + nRow[0]);
-								xMax = max(xMax, tmp.second + nCol[0]);
-								xMin = min(xMin, tmp.second + nCol[0]);
-							
-								//if (jum >= 7 && jum <= 19) white.at<uchar>(tmp.first + nRow[k], tmp.second + nCol[k]) = 125;
-								dst.at<Vec3b>(tmp.first + nRow[0], tmp.second + nCol[0])[0] = 150;
-								myQ.push(make_pair(tmp.first + nRow[0], tmp.second + nCol[0]));
-								if (tmp.first + nRow[0] == a - 1) cek = true;
-							}
+					if (tmp.first + nRow[0] >= 0 && tmp.first + nRow[0] < a && tmp.second + nCol[0] >= 0 && tmp.second + nCol[0] < b) {
+						if (((int)src.at<Vec3b>(tmp.first + nRow[0], tmp.second + nCol[0])[2] == 255) && (int)dst.at<Vec3b>(tmp.first + nRow[0], tmp.second + nCol[0])[0] == 255) {
+							jum++;
+							yMax = max(yMax, tmp.first + nRow[0]);
+							yMin = min(yMin, tmp.first + nRow[0]);
+							xMax = max(xMax, tmp.second + nCol[0]);
+							xMin = min(xMin, tmp.second + nCol[0]);
+
+							//if (jum >= 7 && jum <= 19) white.at<uchar>(tmp.first + nRow[k], tmp.second + nCol[k]) = 125;
+							dst.at<Vec3b>(tmp.first + nRow[0], tmp.second + nCol[0])[0] = 150;
+							myQ.push(make_pair(tmp.first + nRow[0], tmp.second + nCol[0]));
+							if (tmp.first + nRow[0] == a - 1) cek = true;
 						}
+					}
 					//}
 				}
 				//cout << i << "-" << j <<" -"<<jum<<endl;
@@ -90,7 +90,7 @@ Mat whiteArea(Mat src) {
 	for (int i = yMin; i <= yMax; i++) {
 		for (int j = xMin; j <= xMax; j++) {
 			if ((int)src.at<Vec3b>(i, j)[2] == 255)
-				src.at<Vec3b>(i, j)= { 0, 255, 255 };
+				src.at<Vec3b>(i, j) = { 0, 255, 255 };
 		}
 	}
 	return src;
@@ -98,8 +98,8 @@ Mat whiteArea(Mat src) {
 
 Mat RunRLSAWhite(Mat src) {
 	int counts;
-	Mat dst=src;
-	bool cek ;
+	Mat dst = src;
+	bool cek;
 	Vec3b color;
 	//vertikal
 	for (int i = xMin; i <= xMax; i++) {
@@ -107,7 +107,7 @@ Mat RunRLSAWhite(Mat src) {
 		cek = false;
 		for (int j = yMin; j <= yMax; j++) {
 			if ((int)src.at<Vec3b>(j, i)[2] == 255) {
-				if ((int)dst.at<Vec3b>(j, i)[0] == 255 && ((int)src.at<Vec3b>(j-1, i)[2] == 150 || (int)src.at<Vec3b>(j-1, i)[2] == 0) && j > 0 && !cek) {
+				if ((int)dst.at<Vec3b>(j, i)[0] == 255 && ((int)src.at<Vec3b>(j - 1, i)[2] == 150 || (int)src.at<Vec3b>(j - 1, i)[2] == 0) && j > 0 && !cek) {
 					counts = j;
 					cek = true;
 				}
@@ -127,7 +127,7 @@ Mat RunRLSAWhite(Mat src) {
 		for (int j = yMin; j <= yMax; j++) {
 			if ((int)src.at<Vec3b>(j, i)[2] == 150 || (int)src.at<Vec3b>(j, i)[2] == 0) botttomLine[i] = j;
 		}
-		for (int j = botttomLine[i]+1; j < src.rows; j++) {
+		for (int j = botttomLine[i] + 1; j < src.rows; j++) {
 			dst.at<Vec3b>(j, i) = { 255, 255, 255 };
 		}
 	}
@@ -179,7 +179,7 @@ Mat translation(Mat source) {
 		}
 		dstCol = yHorizontal;
 		for (int j = yHorizontal; j <= yMax; j++) {
-			if (posWhiteTop[i].size() == 0) dst.at<uchar>(j, i) = source.at<uchar>(j, i); 
+			if (posWhiteTop[i].size() == 0) dst.at<uchar>(j, i) = source.at<uchar>(j, i);
 			else if (posWhiteTop[i].size() != 0 && j != posWhiteTop[i][idx]) {
 				dst.at<uchar>(dstCol, i) = source.at<uchar>(j, i);
 				dstCol++;
@@ -244,12 +244,12 @@ void posWhiteROI(Mat src) {
 	Mat histoAll(3000, 2000, CV_8UC3, Scalar(255, 255, 255));
 	for (int i = xMin; i <= xMax; i++) {
 		ctr = 0;
-		for (int j = yHorizontal; j >=yMin; j--) {
+		for (int j = yHorizontal; j >= yMin; j--) {
 			if (src.at<Vec3b>(j, i)[0] == 0 && src.at<Vec3b>(j, i)[1] == 255 && src.at<Vec3b>(j, i)[2] == 255) {
 				posWhiteTop[i].push_back(j);
 				ctr++;
 			}
-			else if(src.at<Vec3b>(j, i)[2] == 150 || src.at<Vec3b>(j, i)[2] == 0) ctr++;
+			else if (src.at<Vec3b>(j, i)[2] == 150 || src.at<Vec3b>(j, i)[2] == 0) ctr++;
 		}
 		for (int j = yHorizontal; j <= yMax; j++) {
 			if (src.at<Vec3b>(j, i)[0] == 0 && src.at<Vec3b>(j, i)[1] == 255 && src.at<Vec3b>(j, i)[2] == 255) {
@@ -265,7 +265,7 @@ void posWhiteROI(Mat src) {
 	for (int i = xMin; i <= xMax; i++) {
 		//cout << hist[i] << " ";
 		line(histoW, Point(i, 3000), Point(i, 3000 - histW[i]), Scalar(255, 0, 0), 1, 8, 0);
-		line(histoAll, Point(i, 3000), Point(i, 3000 - histAll[i] ), Scalar(255, 0, 0), 1, 8, 0);
+		line(histoAll, Point(i, 3000), Point(i, 3000 - histAll[i]), Scalar(255, 0, 0), 1, 8, 0);
 	}
 	String windowNameHistW = "Histogram White Size";
 	namedWindow(windowNameHistW, WINDOW_NORMAL);
@@ -277,12 +277,12 @@ void posWhiteROI(Mat src) {
 	imshow(windowNameHistROI, histoAll);
 	bool histROI = imwrite("C:/Users/della_hera/Documents/Hasil Proses/histROI.jpg", histoAll);
 	//bottom
-	
+
 }
 void drawHist(Mat src) {
 	for (int i = 1; i <= 99; i++) {
 		//cout << hist[i] << " ";
-		line(src, Point( i, 12000), Point(i, 12000 - hist[i]), Scalar(255, 0, 0), 1, 8, 0);
+		line(src, Point(i, 12000), Point(i, 12000 - hist[i]), Scalar(255, 0, 0), 1, 8, 0);
 	}
 	String windowNameHist = "Histogram Size";
 	namedWindow(windowNameHist, WINDOW_NORMAL);
@@ -291,26 +291,26 @@ void drawHist(Mat src) {
 }
 
 Mat RunRLSA(Mat src, Mat dst, int value, int key) {
-	int counts, a = src.rows, b = src.cols, jumPix=0;
+	int counts, a = src.rows, b = src.cols, jumPix = 0;
 	//vertikal
-	if(key==1){
+	if (key == 1) {
 		for (int i = 0; i < b; i++) {
 			counts = 0;
 			//jumPix = 0;
 			for (int j = 0; j < a; j++) {
-				if ((int)src.at<uchar>(j, i) == 0 ) {
+				if ((int)src.at<uchar>(j, i) == 0) {
 					//cout << 1;
-						if ((j - counts) <= 26 && (j - counts) >= 0 ) {
+					if ((j - counts) <= 26 && (j - counts) >= 0) {
 						//cout << 2;
-						for (int k = counts; k <= j; k++) {	
-							if ((int)src.at<uchar>(k, i) != 0 && (!((int)src.at<uchar>(k, i - 1) != 0 && (int)src.at<uchar>(k, i + 1) != 0))|| j-counts<7) {
+						for (int k = counts; k <= j; k++) {
+							if ((int)src.at<uchar>(k, i) != 0 && (!((int)src.at<uchar>(k, i - 1) != 0 && (int)src.at<uchar>(k, i + 1) != 0)) || j - counts < 7) {
 								dst.at<uchar>(k, i) = 0;
 								//if ((int)src.at<uchar>(k, i) != 0) dst.at<Vec3b>(k, i) = (0, 0, 0);
 								src.at<uchar>(k, i) = 0;
 							}
 						}
 					}
-					
+
 					counts = j;
 				}
 			}
@@ -325,7 +325,7 @@ Mat RunRLSA(Mat src, Mat dst, int value, int key) {
 					//cout << 1;
 					jumPix++;
 					if (jumPix == 1) counts = j;
-					if ((j - counts) <= 16 && (j - counts) >= 0 && jumPix>1) {
+					if ((j - counts) <= 16 && (j - counts) >= 0 && jumPix > 1) {
 						//cout << 2;
 						for (int k = counts; k <= j; k++) {
 							if ((int)src.at<uchar>(i, k) != 0) dst.at<uchar>(i, k) = 0;
@@ -345,7 +345,7 @@ Mat RunRLSA(Mat src, Mat dst, int value, int key) {
 					//cout << 1;
 					jumPix++;
 					if (jumPix == 1) counts = 1;
-					if ((j - counts) <= 75 && (j - counts) >= 0 && jumPix>1) {
+					if ((j - counts) <= 75 && (j - counts) >= 0 && jumPix > 1) {
 						//cout << 2;
 						for (int k = counts; k <= j; k++) {
 							if ((int)src.at<uchar>(i, k) != 0) dst.at<Vec3b>(i, k)[2] = 150;
@@ -361,28 +361,37 @@ Mat RunRLSA(Mat src, Mat dst, int value, int key) {
 }
 
 int xRegression(int x, int value) {
-	int sumFirstPixel = value * (x - (xMax)) / (xMin - (xMax));
+	int sumFirstPixel = ((-value) * (x - (xMin)) / (xMax - (xMin))) + value;
 	return sumFirstPixel;
 }
 
 int yRegression(int y, int value) {
 	int sumPixelY;
-	if (y<yHorizontal) 
-		sumPixelY = value * (y - (yHorizontal-9)) / (yMin - (yHorizontal - 9));
-	else sumPixelY = value * (y - (yHorizontal + 9)) / (yMax - (yHorizontal + 9));
-
-return sumPixelY;
+	if (y <= yHorizontal) {
+		sumPixelY = value - (value * (y - yMin) / (yHorizontal - yMin));
+	}
+	else {
+		sumPixelY = (value * (y - yHorizontal) / (yMax - yHorizontal));
+	}
+	return sumPixelY;
 }
 
 
-void deleteWhitePixel(Mat src) {
+void deleteWhitePixel(Mat src, int value) {
 	int histW[2000], top, bottom, center, cek, sumPix, dif;
-	Mat histoW(3000, 2000, CV_8UC3, Scalar(255, 255, 255));
+	Mat histoW(50, 2000, CV_8UC3, Scalar(255, 255, 255));
+	bool tes = 0;
 	for (int i = xMin; i <= xMax; i++) {
 		cek = 0;
+		cumValue = 0;
+		cout << endl << i << "=";
 		for (int j = yHorizontal; j >= yMin; j--) {
 			if (src.at<Vec3b>(j, i)[0] == 0 && src.at<Vec3b>(j, i)[1] == 255 && src.at<Vec3b>(j, i)[2] == 255) {
-				if (src.at<Vec3b>(j - 1, i)[0]==255|| src.at<Vec3b>(j - 1, i)[2] == 150 || src.at<Vec3b>(j - 1, i)[2] == 0) {
+				if (j == yHorizontal) {
+					bottom = j;
+					cek++;
+				}
+				else if (src.at<Vec3b>(j - 1, i)[0] == 255 || src.at<Vec3b>(j - 1, i)[2] == 150 || src.at<Vec3b>(j - 1, i)[2] == 0) {
 					top = j;
 					cek++;
 				}
@@ -392,16 +401,26 @@ void deleteWhitePixel(Mat src) {
 				}
 				if (cek == 2) {
 					center = (bottom + top) / 2;
-					sumPix = yRegression(center, (xRegression(i, 15)));
+					sumPix = yRegression(center, (xRegression(i, value)));
+					if (tes) sumPix++;
+					if (cumValue > sumPix) sumPix = 0;
+					else sumPix -= cumValue;
+					cumValue += sumPix;
+					//if (i == xMax - 30) sumPix += value;;
 					cek = 0;
-					if (sumPix>0) {
-					/*	dif = bottom - top - sumPix+1;
-						for (int k = top + (dif / 2) + sumPix - 1; k >= top + (dif / 2) - 1; k--) {
-							if (src.at<Vec3b>(k, i)[0] == 0 && src.at<Vec3b>(k, i)[1] == 255 && src.at<Vec3b>(k, i)[2] == 255)  posWhiteTop[i].push_back(k);
-						}*/
-						dif = bottom - top - sumPix + 1;
+					if (sumPix > 0) {
+						for (int k = center + ((sumPix - 1) / 2); k >= center - ((sumPix - 1) / 2); k--) {
+							//if (src.at<Vec3b>(k, i)[0] == 0 && src.at<Vec3b>(k, i)[1] == 255 && src.at<Vec3b>(k, i)[2] == 255)
+							posWhiteTop[i].push_back(k);
+						}
+						//dif = bottom - top - sumPix+1;
+						//for (int k = top + (dif / 2) + sumPix - 1; k >= top + (dif / 2); k--) {
+						//	if (src.at<Vec3b>(k, i)[0] == 0 && src.at<Vec3b>(k, i)[1] == 255 && src.at<Vec3b>(k, i)[2] == 255)  posWhiteTop[i].push_back(k);
+						//	//cout << k << " ";
+						//}
+						/*dif = bottom - top - sumPix + 1;
 						if (dif >0) {
-						for (int k = bottom - (dif / 2); k >= top + (dif / 2); k--) {
+						for (int k = top + (dif / 2) + sumPix - 1; k >= top + (dif / 2); k--) {
 							if (src.at<Vec3b>(k, i)[0] == 0 && src.at<Vec3b>(k, i)[1] == 255 && src.at<Vec3b>(k, i)[2] == 255)  posWhiteTop[i].push_back(k);
 						}
 						}
@@ -409,14 +428,20 @@ void deleteWhitePixel(Mat src) {
 							for (int k = bottom; k >= top; k--) {
 								if (src.at<Vec3b>(k, i)[0] == 0 && src.at<Vec3b>(k, i)[1] == 255 && src.at<Vec3b>(k, i)[2] == 255)  posWhiteTop[i].push_back(k);
 							}
-						}
+						}*/
 					}
 				}
 			}
 		}
+		cumValue = 0;
+		cek = 0;
 		for (int j = yHorizontal; j <= yMax; j++) {
 			if (src.at<Vec3b>(j, i)[0] == 0 && src.at<Vec3b>(j, i)[1] == 255 && src.at<Vec3b>(j, i)[2] == 255) {
-				if (src.at<Vec3b>(j - 1, i)[0] == 255 || src.at<Vec3b>(j - 1, i)[2] == 150 || src.at<Vec3b>(j - 1, i)[2] == 0) {
+				if (j == yHorizontal) {
+					top = j;
+					cek++;
+				}
+				else if (src.at<Vec3b>(j - 1, i)[0] == 255 || src.at<Vec3b>(j - 1, i)[2] == 150 || src.at<Vec3b>(j - 1, i)[2] == 0) {
 					top = j;
 					cek++;
 				}
@@ -425,24 +450,30 @@ void deleteWhitePixel(Mat src) {
 					cek++;
 				}
 				if (cek == 2) {
+					sumPix = 0;
 					center = (bottom + top) / 2;
-					sumPix = yRegression(center, (xRegression(i, 0)));
+					sumPix = yRegression(center, (xRegression(i, value)));
+					cout << sumPix << " ";
+					if (cumValue > sumPix) sumPix = 0;
+					else sumPix -= cumValue;
+					cumValue += sumPix;
 					cek = 0;
-					if (sumPix >0) {
-						dif = bottom - top - sumPix;
-						for (int k = top + (dif / 2) - 1; k < top + (sumPix / 2) + sumPix - 1; k++) {
+					if (sumPix > 0) {
+						for (int k = center - ((sumPix - 1) / 2); k <= center + ((sumPix - 1) / 2); k++) {
+							//	if (src.at<Vec3b>(k, i)[0] == 0 && src.at<Vec3b>(k, i)[1] == 255 && src.at<Vec3b>(k, i)[2] == 255) 
 							posWhiteTop[i].push_back(k);
 						}
 					}
 				}
 			}
 		}
+
 		histW[i] = posWhiteTop[i].size();// +posWhiteBottom[i].size();
 	}
 
 	for (int i = xMin; i <= xMax; i++) {
 		//cout << hist[i] << " ";
-		line(histoW, Point(i, 3000), Point(i, 3000 - histW[i]), Scalar(255, 0, 0), 1, 8, 0);
+		line(histoW, Point(i, 50), Point(i, 50 - histW[i]), Scalar(255, 0, 0), 1, 8, 0);
 	}
 	String windowNameHistW = "Histogram White Size";
 	namedWindow(windowNameHistW, WINDOW_NORMAL);
@@ -466,13 +497,13 @@ int main(int argc, char** argv)
 	bool isGrayscale = imwrite("C:/Users/della_hera/Documents/Hasil Proses/Citra GrayscaleA.jpg", image);
 
 	// Create a window
-	String windowName = "Citra Buku"; 
+	String windowName = "Citra Buku";
 	//namedWindow(windowName, WINDOW_NORMAL);
 	//imshow(windowName, image); 
 
 	//increase the brightness
 	Mat imageBrighness;
-	image.convertTo(imageBrighness, -1, 1, 60);  
+	image.convertTo(imageBrighness, -1, 1, 60);
 	String windowNameBrighness = "Brighness Increased";
 	//namedWindow(windowNameBrighness, WINDOW_NORMAL);
 	//imshow(windowNameBrighness, imageBrighness);
@@ -537,24 +568,32 @@ int main(int argc, char** argv)
 	//cvtColor(imgLine, white, COLOR_RGB2GRAY);
 	t1 = clock();
 	//HRWP = findWhiteSpace(imgLine);
+	HRWP = RunRLSAWhite(imgLine);
 	HRWP = whiteArea(imgLine);
-	//HRWP = RunRLSAWhite(imgLine);
 	t2 = clock();
 	cout << "\n\nWhite space = ";
-	cout <<  "Time " << (float)(t2 - t1) / CLOCKS_PER_SEC << " seconds\n" << endl;
+	cout << "Time " << (float)(t2 - t1) / CLOCKS_PER_SEC << " seconds\n" << endl;
 	String windowNameDetect = "Horizontal Detected Image";
 	//namedWindow(windowNameDetect, WINDOW_NORMAL);
 	//imshow(windowNameDetect, imgRGB);
 	bool isWhite = imwrite("C:/Users/della_hera/Documents/Hasil Proses/Citra Deteksi Spasi11.jpg", HRWP);
 
 	//posWhiteROI(HRWP);
-	cout << yRegression(yMin, 1) << "Test " << posWhiteTop[xMin].size() <<" "<< yRegression(yMax, 1)<< " "<< xRegression(xMin, 15)<<" "<< xRegression(xMin+50, 15)<<endl;
-	deleteWhitePixel(HRWP);
+	cout << yRegression(yMin, 1) << "Test " << posWhiteTop[xMin].size() << " " << yRegression(yHorizontal, 1) << " " << xRegression(xMin, 15) << " " << xRegression(xMin + 50, 15) << " " << xRegression(xMax, 15) << endl;
+	t1 = clock();
+	deleteWhitePixel(HRWP, 70);
+	t2 = clock();
+	cout << "\n\nPosition White space = ";
+	cout << "Time " << (float)(t2 - t1) / CLOCKS_PER_SEC << " seconds\n" << endl;
 	adaptiveThreshold(imageContrast, imageBinary, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 7, 2);
+	t1 = clock();
 	Mat output = translation(imageBinary);
+	t2 = clock();
+	cout << "\n\nTranslation = ";
+	cout << "Time " << (float)(t2 - t1) / CLOCKS_PER_SEC << " seconds\n" << endl;
 	bool isBinerTes = imwrite("C:/Users/della_hera/Documents/Hasil Proses/Citra Binerhaha.jpg", imageBinary);
 	bool OutputTes = imwrite("C:/Users/della_hera/Documents/Hasil Proses/Output.jpg", output);
-	cout << Row_size << " " << Col_size << " " << yMax << " " << yMin << " " << xMax << " " << xMin <<" "<< endl;
-	waitKey(0); 
+	cout << Row_size << " " << Col_size << " " << yMax << " " << yMin << " " << xMax << " " << xMin << " " << yHorizontal << " " << endl;
+	waitKey(0);
 	destroyAllWindows();
 }
